@@ -1,89 +1,59 @@
 import React from 'react';
 import { fetchData, } from './utils/fetch.api'
+import Authors from './components/Authors/Authors'
+import Articles from './components/Articles/Articles'
 
 function App() {
 
     const [response, setResponse,] = React.useState({
+        data: null,
         error: null,
-        loading: true,
-        data: null
+        loading: true
     })
 
     React.useEffect(() => {
-
         fetchData('http://localhost:8080/article/all')
-            .then(data => setResponse({ ...response, data, loading: false, }))
-            .catch(error => setResponse({ ...response, error, loading: false }))
+            .then(data => setResponse(res => ({ ...res, data, loading: false })))
+            .catch(error => setResponse(res => ({ ...res, error, loading: false })))
     }, [])
 
     const { data, loading, error, } = response
 
-    if (error) {
-        console.log('!! ', error)
+    if (data) {
+        console.log('!!! ', data)
+    }
+
+    if (!data || error) {
+        error && console.error('[Error - App]: ', error)
         return null;
     }
 
     if (loading) {
         return (
-            <h1>Loading</h1>
+            <h1 style={{ textAlign: 'center' }}>
+                Loading...
+            </h1>
         )
     }
 
-    const { content: articles, } = data
+    const { content, } = data
 
+    const authors = content.map(({ author, }) => author)
+
+    const articles = content.map(({ header, paragraphs, author, }) => ({
+        authorName: `${author.firstName} ${author.lastName}`,
+        header,
+        paragraphs
+    }))
+
+    console.log('!!! ', articles)
 
     return (
-        <div style={{
-            margin: '1rem',
-            display: 'flex',
-            flexDirection: 'column'
-        }}>
-            {articles.map(({ author, header, paragraphs }) => (
-                <div
-                    key={header}
-                    style={{
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        borderRadius: '7px',
-                        boxShadow: '0 3px 4px #ccc',
-                        minWidth: '80%',
-                        maxWidth: '80%',
-                        margin: '1rem auto',
-                    }}
-                >
-                    <div style={{
-                        padding: '1rem',
-                        // borderRadius: '7px',
-                        borderRight: '3px solid #ccc',
-                        backgroundColor: '#d9d9d9'
-                    }}>
-                        <h2 style={{ textAlign: 'center' }}>
-                            {`${author.firstName} ${author.lastName}`}
-                        </h2>
-                        <img
-                            src={`${author.image}`}
-                            style={{
-                                maxWidth: '10rem',
-                                maxHeight: '10rem',
-                                borderRadius: '7px',
-                                boxShadow: '0 5px 7px #ccc'
-                            }}
-                        />
-                    </div>
-
-                    <div style={{ padding: '1rem', }}>
-                        <h1>{header}</h1>
-                        {paragraphs.map(({ content, }) => (
-                            <p key={content}>
-                                {content}
-                            </p>
-                        ))}
-                    </div>
-
-                </div>
-            ))}
-        </div>
-    );
+        <>
+            <Authors authors={authors} />
+            <Articles articles={articles} />
+        </>
+    )
 }
 
 export default App;
